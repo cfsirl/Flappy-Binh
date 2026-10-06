@@ -1,5 +1,18 @@
 # Flappy Binh - Requirements Analysis
 
+> **Status: illustrative / superseded.** This document predates the resolved requirements.
+> Its sample code contains three known deviations from the authoritative requirements docs
+> (`requirements.md`, `boss_battle_requirements.md`) and the decisions in
+> `RECOMMENDATIONS.md` — treat the code below as a sketch, not a spec:
+> 1. **Scoring** is awarded when a pipe leaves the screen (`p.x + p.width <= 0`); requirements
+>    score when the player *passes* the pipe.
+> 2. **Bridge width** is hard-coded to `300`; requirements specify the bridge spans the
+>    **entire canvas width**.
+> 3. **Boss state** changes per-frame via `Math.random() < 0.01`; requirements use a **fixed
+>    3-second tick** (one action per tick, 50/50 jump/shoot).
+>
+> When implementing, follow the requirements docs and `RECOMMENDATIONS.md`, not this file.
+
 ## Understanding the Requirements
 
 Looking at the requirements document, I can see this is a well-structured project with clear specifications. The key elements are:
@@ -61,6 +74,9 @@ Based on the updated requirements, here's what I would implement:
    - Responsive design
 
 ## Sample Implementation Code
+
+> ⚠️ **Do not use as-is.** This sketch has the three known deviations noted in the header
+> (off-screen scoring, 300 px bridge, per-frame random boss state). It shows structure only.
 
 Here's how I would approach the implementation based on the requirements:
 

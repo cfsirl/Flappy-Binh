@@ -35,13 +35,18 @@ An advanced stage featuring:
 ## Running with Claude
 To run this project with Claude:
 1. Ensure you're logged into Claude via the command line: `claude login`
-2. Run: `claude /srv/hermes/data/claude/flappy-binh`
+2. Run: `claude /mnt/hermes_data/claude/flappy-binh`
 
 ## Running in Browser
 To play directly in your browser:
-1. Open `index.html` in any modern web browser
-2. Click "Start Game"
-3. Click or tap to make the bird flap
+1. Serve the project folder over HTTP (avoids `file://` asset/CORS issues):
+   ```bash
+   cd /mnt/hermes_data/claude/flappy-binh
+   python3 -m http.server 8000
+   ```
+2. Open `http://localhost:8000` in any modern web browser
+3. Click "Start Game"
+4. Click or tap to make the bird flap
 
 ## Ethan (Binh) Character
 The main character is Ethan, also known as Binh, a Vietnamese name. 

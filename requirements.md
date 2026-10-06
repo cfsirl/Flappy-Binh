@@ -6,28 +6,47 @@ Flappy Binh is a parody of the popular Flappy Bird game with a Vietnamese cultur
 ## Core Requirements
 
 ### Game Mechanics
+
+**Logical world** — the simulation runs in a fixed **288×512 logical-pixel** world (portrait, classic Flappy Bird play area). The canvas is scaled to the viewport (devicePixelRatio-aware); the responsive breakpoints below govern the surrounding UI only, never the physics. All values in this document are logical px / logical frames (60 fps reference).
+
+**Physics** (initial tuning baseline — confirm in playtest):
+
+| Constant | Value | Notes |
+|---|---|---|
+| `gravity` | 0.45 px/frame² | applied to vertical velocity each frame |
+| `flapVelocity` | −8.0 px/frame | set on each tap; overrides current velocity |
+| `maxFallSpeed` | 12 px/frame | clamps downward velocity |
+| `playerX` | ¼ × canvas width (72 px) | fixed horizontal position in normal play |
+
 - **Basic Gameplay**: Player controls Ethan that continuously falls and must flap to avoid pipes
 - **Controls**: Click/tap to make Ethan flap upward
 - **Collision Detection**: 
-  - Pipe collisions (top and bottom)
-  - Ground collision
-  - Ceiling collision
-- **Scoring System**: +1 point for each pipe successfully passed
+  - Pipe collisions (top and bottom) — lethal
+  - Ground collision — lethal
+  - Ceiling collision — **not lethal**: on contact, clamp `y = 0` and `velocity = 0` (bonk), matching Flappy Bird
+  - Checks are evaluated each frame after position update, using the inset player hitbox below
+- **Player Hitbox (forgiveness)**: Collision box = drawn sprite **inset 4 px on all sides** (`HITBOX_INSET = 4`); the full 48 px head is still drawn. Primary feel control — the game should play as forgiving as Flappy Bird, not as its sprite outline.
+- **Scoring System**: +1 point when Binh **passes a pipe** — awarded exactly once per pipe pair when the pipe's right edge crosses the player's left edge (`pipe.x + pipe.width < playerX`). A pipe that is never passed (death first) scores nothing; a pipe leaving the screen never scores by itself.
 - **Difficulty Progression**: Pipes move faster as score increases
 - **Theme Changes**: Every 25 points, the theme changes between daytime and dusk
-- **Speed Increase**: Every 25 points, pipe speed increases by 25% (pipeSpeed = baseSpeed * (1 + 0.25 * floor(score/25)))
+- **Speed Increase**: Every 25 points, pipe speed increases by 25%: `pipeSpeed = min(baseSpeed * (1 + 0.25 * floor(score/25)), 8)`, with `baseSpeed = 2.5 px/frame` and a hard cap of **8 px/frame** (~3.2×). The cap is reached around score 100 — where the first boss battle begins.
 - **High Score Persistence**: Store the highest score in `localStorage` under key `flappyBinhHighScore` and display it on the Game‑Over screen.
 - **Accessibility Enhancements**: 
   - High‑contrast UI colors for color‑blind friendliness.
   - Keyboard shortcuts: Space/Enter to flap, `R` to restart.
   - Optional sound‑off toggle in the settings menu.
 
-- **Special Ending**: When Ethan hits a pipe, ground, or ceiling, he falls into a toilet and gets pooped on by 2-3 random birds before game over
-- **Boss Battle Stage**: Advanced stage with unique boss battle mechanics (inspired by Mario's Bowser battles) occurring every 100 points
+- **Special Ending (death sequence, ≈ 1.6 s total)**: When Ethan hits a **pipe or the ground** (ceiling is a non-lethal bonk), run this timeline before the Game Over screen:
+  | t (s) | Event |
+  |---|---|
+  | 0.0 | Pipe scroll freezes; player velocity → `maxFallSpeed` |
+  | 0.0–0.6 | Player tumbles (rotates ≈ −90°) to a toilet sprite that spawns at `(playerX, groundY)` |
+  | 0.6–1.4 | 2–3 bird sprites (`2 + floor(rand * 2)`) arc in from the top, each dropping a "poop" sprite onto the player |
+  | 1.4–1.6 | Screen flash / thud, then transition to the Game Over screen |
+- **Boss Battle Stage**: Advanced stage with unique boss battle mechanics (inspired by Mario's Bowser battles) occurring every 100 points. Boss frequency is fixed at 100-point intervals; difficulty increases solely through faster laser beams (+10% per successive boss battle, capped at 3×). On loss during a boss battle, the **entire game restarts from scratch** — score, speed, laser multiplier, and boss state all reset — **except the persisted high score, which is retained** (see `boss_battle_requirements.md`, Win/Lose Conditions).
 
-- **Head Graphic Constraints**: Render `binh-head.png` at a height of 48 px (maintaining aspect ratio). The image must be cropped to remove any background before rendering.
+- **Head Graphic Constraints**: Render `binh-head.png` at a height of 48 px (maintaining aspect ratio → width ≈ 36.5 px; the source image is 276×363). The image **already has a transparent background** (verified: RGBA, 26.8% transparent pixels) — do NOT apply an additional background-removal/autocrop step, as it risks shaving the subject. Fall back to a placeholder silhouette if the image fails to load.
 - **Vietnamese Cultural Elements**: Include at least one of the following in the background:
-  - Vietnamese flag colors (red background with a yellow star).
   - Traditional pattern overlay (e.g., a subtle lotus motif).
   - Optional background music snippet of traditional Vietnamese instruments.
 - **Responsive Design Breakpoints**:\
@@ -38,13 +57,16 @@ Flappy Binh is a parody of the popular Flappy Bird game with a Vietnamese cultur
 - **Asset Loading Strategy**: Lazy‑load heavy assets (head image, boss sprites) after the initial game canvas is created to keep the initial page load < 200 KB.
 
 - **Ethan (Binh) Character**: Cartoon character combining actual head graphic with cartoon body
-- **Head Reference**: Use reference image `binh-head.png` for facial features (eyes, mouth, hair style) - resized and background removed
+- **Head Reference**: Use reference image `binh-head.png` for facial features (eyes, mouth, hair style), resized to the 48 px render height (background is already transparent — see Head Graphic Constraints)
 - **Body**: Cartoon body design (blue shirt, red pants) with simple limbs
-- **Pipe Design**: Green pipes with brown caps
+- **Pipe Design**: Green pipes with brown caps (cap 10 px wider than the body)
+  - Pipe body width: 52 px
+  - Pipe gap: 150 px minimum between top and bottom pipe openings (randomize the gap-center position; the gap is never narrowed to raise difficulty)
+  - Pipe spawn rate: one pipe pair every **90 logical frames** (1.5 s at 60 fps), driven by a time accumulator (dt-based), not `frames % N`, so 120 Hz displays spawn identically
 - **Background**: Sky gradient with clouds
 - **Ground**: Brown ground with green grass
 - **Vietnamese Themed Elements**:
-  - Vietnamese flag elements in background
+  - Traditional pattern overlay (e.g., subtle lotus motif) in background
   - Cultural references in game aesthetics
 
 ### 3. User Interface Requirements
@@ -63,6 +85,7 @@ Flappy Binh is a parody of the popular Flappy Bird game with a Vietnamese cultur
 - **Platform**: Web-based (HTML5, CSS3, JavaScript)
 - **Browser Compatibility**: Modern browsers (Chrome, Firefox, Safari, Edge)
 - **Performance**: Smooth gameplay at 60fps
+- **Game Loop**: Fixed logical 60 fps timestep via a dt accumulator; physics and timers tick in logical frames, rendering follows the display refresh
 - **File Structure**: Single HTML file with embedded CSS and JS for simplicity
 
 ### 5. Additional Features
@@ -125,5 +148,5 @@ Flappy Binh is a parody of the popular Flappy Bird game with a Vietnamese cultur
 
 ## Known Limitations
 - Single HTML file implementation (no external dependencies)
-- No sound effects or music
+- No bundled audio files; background music and the optional bridge-break sound cue are player-enabled via the settings sound toggle (see Accessibility Enhancements)
 - Limited to browser-based execution
