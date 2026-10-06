@@ -90,7 +90,7 @@ This document outlines the requirements for a boss battle stage in Flappy Binh t
 - **Interaction**:
   - Touching hatchet destroys bridge
   - Bridge destruction = win condition
-  - On touch: bridge collapses over **0.5 s** (`easeInBack`: deck sinks and cracks), plays optional `bridge_break.wav` (0.4 s), boss drops into the pit → Victory → normal play resumes at `score + 100`, `pipeSpeed` recalculated from the formula, `bossCount++`
+  - On touch: bridge collapses over **0.5 s** (`easeInBack`: deck sinks and cracks), plays the synthesized bridge-break cue (WebAudio, ≈ 0.4 s, subject to the sound toggle) → boss drops into the pit → Victory → normal play resumes at `score + 100`, `pipeSpeed` recalculated from the formula, `bossCount++`
 
 ### 5. Safe Zone Mechanics
 - **Bridge Safety**:
@@ -131,7 +131,7 @@ This document outlines the requirements for a boss battle stage in Flappy Binh t
 - **Bridge Dimensions**: The bridge spans the **entire width** of the canvas (`bridgeWidth = canvasWidth`). A safety margin of ±5 px is allowed for player landing on each side. Picture a Bowser Castle III-style platform from Super Mario Bros. — a solid bridge stretching edge to edge with a drop into the pit below.
 - **Laser Speed Cap**: Laser speed is limited to a maximum of 3× the base laser speed to prevent unplayable difficulty.
 - **Laser Warning UI**: The mole outline flashes red for 0.5 s immediately before a laser is fired, giving the player a visual cue.
-- **Hatchet Interaction Feedback**: When the hatchet is touched, the bridge collapses with a 0.5 s animation and plays an optional `bridge_break.wav` sound cue.
+- **Hatchet Interaction Feedback**: When the hatchet is touched, the bridge collapses with a 0.5 s animation and plays the synthesized bridge-break sound cue (WebAudio, no bundled audio files).
 - **Hitbox Definitions** (anchors: rectangles are top-left `(x, y)`; world is 288×512 logical px):
   - **Boss Body**: AABB `60×80`, top-left at `(bossX, bossY)`; follows the jump arc.
   - **Mole**: circle, radius **10 px**, centered at `(bossX + 20, bossY + 45)` (left of the mouth, per the character design).

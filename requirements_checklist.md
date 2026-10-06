@@ -33,22 +33,12 @@
 | [ ] | Player hitbox uses the same 4 px inset in the boss battle. | Debug overlay matches normal-play inset. |
 | [ ] | Transition timeline: pipe clear + 0.5 s physics freeze → 1 s bridge slide-in + boss fade-in at random end → `bossActive` with tick clock and 12 s countdown started. | Automated script steps through frames; verifies state changes at t=0/1s. |
 | [ ] | Hatchet: 32×32 at `(0.75 * canvasWidth, bridgeY - 16)`; only win path (boss blocks walking). | Collision test; attempt straight walk → blocked. |
-| [ ] | Hatchet touch → 0.5 s `easeInBack` collapse + optional `bridge_break.wav` → boss falls → Victory → resume at score+100, `bossCount++`. | Play animation; confirm duration, sound trigger, score continuity. |
+| [ ] | Hatchet touch → 0.5 s `easeInBack` collapse + synthesized bridge-break cue (WebAudio, subject to sound toggle) → boss falls → Victory → resume at score+100, `bossCount++`. | Play animation; confirm duration, sound trigger (and that it mutes with the toggle), score continuity. |
 | [ ] | Hitboxes: boss body AABB 60×80 at `(bossX, bossY)` (follows arc); mole r=10 at `(bossX+20, bossY+45)`; laser line 5 px radius; hatchet AABB 32×32. | Debug overlay shows correct shapes and anchors. |
 | [ ] | Loss during boss: 1.6 s death sequence → full restart (score/speed/laser/bossCount/theme reset) → start screen; **localStorage high score retained**. | After loss, inspect `localStorage` (unchanged), `score`, `state`. |
 
-## 3. Pending Design Decisions (not yet approved — see RECOMMENDATIONS.md)
-| ✅ | Item | Status |
-|----|------|--------|
-| [ ] | A7: Theme objects (`day`/`dusk`) values + 0.5 s crossfade | awaiting decision |
-| [ ] | A8: Toilet sprite + 2-3 bird/poop assets, canvas-drawn or PNG | awaiting decision |
-| [ ] | B2: Body sprite 36×32, 2-3 frame idle/flap animation | awaiting decision |
-| [ ] | B3: WebP export of head image to ease the 200 KB budget | awaiting decision |
-| [ ] | D1: Score pop animation (1.3× scale, 100 ms) | awaiting decision |
-| [ ] | D3: Sound toggle UI details + which tracks ship (none bundled vs. optional files) | awaiting decision |
-| [ ] | D4: Keyboard mapping + `R` restart scope (does it clear high score?) | awaiting decision |
-| [ ] | D5: Desktop side panel (`#statsPanel`, 280 px) content: high score / bosses defeated / laser level | awaiting decision |
-| [ ] | D6: Colorblind palette values + `?cb=1` toggle + shape cues on pipe caps | awaiting decision |
+## 3. All Decisions Finalized ✅
+The previously pending items (A7 themes, A8 death-sequence art, B2 body sprite, B3 WebP, D1–D6 UI/accessibility) were all accepted on 2026-10-06 and are now specified in the requirements docs above. Remaining verification is implementation-level only.
 
 ## 4. Documentation & General
 | ✅ | Item | Details / Test Criteria |
@@ -58,7 +48,7 @@
 | [ ] | License section present (MIT). | License file exists and matches header. |
 | [ ] | Future enhancement table with priority, feature, rationale added. | Table present in README under “Future Enhancement Ideas”. |
 | [ ] | Side‑panel spec (content, width, background) documented in requirements. | Verify checklist item 2‑15 references side‑panel. |
-| [ ] | All asset filenames referenced correctly (`binh-head.png`, `bridge_break.wav`, etc.). | Search codebase for mismatched names; none found. |
+| [ ] | No bundled audio/image assets beyond `binh-head.png` (+ its WebP); all other art is canvas-drawn and all sound is WebAudio-synthesized. | Grep for asset references; only the head image (png/webp) appears as a file. |
 
 ---
 

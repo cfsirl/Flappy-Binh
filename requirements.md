@@ -28,15 +28,17 @@ Flappy Binh is a parody of the popular Flappy Bird game with a Vietnamese cultur
 - **Player Hitbox (forgiveness)**: Collision box = drawn sprite **inset 4 px on all sides** (`HITBOX_INSET = 4`); the full 48 px head is still drawn. Primary feel control — the game should play as forgiving as Flappy Bird, not as its sprite outline.
 - **Scoring System**: +1 point when Binh **passes a pipe** — awarded exactly once per pipe pair when the pipe's right edge crosses the player's left edge (`pipe.x + pipe.width < playerX`). A pipe that is never passed (death first) scores nothing; a pipe leaving the screen never scores by itself.
 - **Difficulty Progression**: Pipes move faster as score increases
-- **Theme Changes**: Every 25 points, the theme changes between daytime and dusk
+- **Theme Changes**: Every 25 points, the theme changes between daytime and dusk (even 25-point blocks = day, odd = dusk), with a **0.5 s crossfade** between themes. Themes are data objects so the switch is a lookup, not scattered conditionals:
+  - `day:  { sky: "#87CEEB", cloud: "rgba(255,255,255,0.85)", ground: "#3CB371" }`
+  - `dusk: { sky: "#2C3E50", cloud: "rgba(120,120,140,0.8)",  ground: "#2E7D32" }`
 - **Speed Increase**: Every 25 points, pipe speed increases by 25%: `pipeSpeed = min(baseSpeed * (1 + 0.25 * floor(score/25)), 8)`, with `baseSpeed = 2.5 px/frame` and a hard cap of **8 px/frame** (~3.2×). The cap is reached around score 100 — where the first boss battle begins.
 - **High Score Persistence**: Store the highest score in `localStorage` under key `flappyBinhHighScore` and display it on the Game‑Over screen.
 - **Accessibility Enhancements**: 
-  - High‑contrast UI colors for color‑blind friendliness.
-  - Keyboard shortcuts: Space/Enter to flap, `R` to restart.
-  - Optional sound‑off toggle in the settings menu.
+  - High-contrast UI colors for color-blind friendliness, WCAG AA (≥ 4.5:1). Baseline palette: `--fg #FFFFFF`, `--bg #1E88E5`, `--accent #FFD500`, `--danger #FF5252`. A settings toggle (and `?cb=1` query param) enables **colorblind mode**: pipes swap from green to a **blue/orange** pair and gain **shape cues** (chevron on pipe caps) so the gap is identifiable without color.
+  - Keyboard shortcuts: `Space`/`Enter` to flap (ignore `e.repeat`; call `preventDefault()` to stop page scroll), `R` to restart — works in playing / game-over / boss states and does **not** clear the high score.
+  - Sound toggle: gear button on the start screen opens a settings menu containing `#soundToggle`, default **on**, persisted in `localStorage` under key `flappyBinhSoundEnabled`. All audio (bridge-break cue, optional background-music loop) is **synthesized via WebAudio** — no bundled audio files.
 
-- **Special Ending (death sequence, ≈ 1.6 s total)**: When Ethan hits a **pipe or the ground** (ceiling is a non-lethal bonk), run this timeline before the Game Over screen:
+- **Special Ending (death sequence, ≈ 1.6 s total)**: When Ethan hits a **pipe or the ground** (ceiling is a non-lethal bonk), run this timeline before the Game Over screen. All sequence art (toilet, birds, poop) is **canvas-drawn vectors** (white oval bowl, 2–3 simple birds with a 3-frame fall animation, brown blobs) — no image assets:
   | t (s) | Event |
   |---|---|
   | 0.0 | Pipe scroll freezes; player velocity → `maxFallSpeed` |
@@ -52,13 +54,13 @@ Flappy Binh is a parody of the popular Flappy Bird game with a Vietnamese cultur
 - **Responsive Design Breakpoints**:\
   - Mobile: viewport width ≤ 480 px – UI elements stack vertically, score displayed at top center.\
   - Tablet: viewport width > 480 px and ≤ 1024 px – UI elements arranged horizontally, score on the right, with slightly larger touch targets.\
-  - Desktop/Laptop: viewport width > 1024 px – UI elements arranged horizontally with additional margin, optional side panel for extra stats.\
+  - Desktop/Laptop: viewport width > 1024 px – UI elements arranged horizontally with additional margin, plus a stats side panel: `#statsPanel`, width 280 px (`grid-template-columns: 1fr 280px`), background `var(--card)`, showing **High Score**, **Bosses Defeated (this run)**, and **Laser Level** (current multiplier). Hidden below 1024 px.\
 
-- **Asset Loading Strategy**: Lazy‑load heavy assets (head image, boss sprites) after the initial game canvas is created to keep the initial page load < 200 KB.
+- **Asset Loading Strategy**: Lazy-load the head image after the initial game canvas is created (via `requestIdleCallback`) to keep the initial page load < 200 KB. Ship the head in both **PNG** (124 KB) and **WebP** (~60 KB); probe support with an `Image` instance and use WebP when available, PNG as fallback. All other art (pipes, bridge, boss, hatchet, death-sequence sprites) is **canvas-drawn vectors** — no additional image assets.
 
 - **Ethan (Binh) Character**: Cartoon character combining actual head graphic with cartoon body
 - **Head Reference**: Use reference image `binh-head.png` for facial features (eyes, mouth, hair style), resized to the 48 px render height (background is already transparent — see Head Graphic Constraints)
-- **Body**: Cartoon body design (blue shirt, red pants) with simple limbs
+- **Body**: Cartoon body design (blue shirt `#4169E1`, red pants `#8B0000`), **canvas-drawn** (no sprite PNG), **36×32 px** under the head (head ≈ 36.5 px wide — matches); total character ≈ 80 px tall. Limbs: legs 8×15 px, arms 5×10 px. Animation: 2-frame idle bob (±1 px at 8 fps) + 3-frame flap (arms up/down).
 - **Pipe Design**: Green pipes with brown caps (cap 10 px wider than the body)
   - Pipe body width: 52 px
   - Pipe gap: 150 px minimum between top and bottom pipe openings (randomize the gap-center position; the gap is never narrowed to raise difficulty)
@@ -75,7 +77,7 @@ Flappy Binh is a parody of the popular Flappy Bird game with a Vietnamese cultur
   - Brief description
   - Start button
 - **Game Screen**:
-  - Score display during gameplay
+  - Score display during gameplay: large white outlined number, top center; on increment, scale pop 1.0 → 1.3 → 1.0 over 100 ms
 - **Game Over Screen**:
   - Final score display
   - Play again button
@@ -148,5 +150,5 @@ Flappy Binh is a parody of the popular Flappy Bird game with a Vietnamese cultur
 
 ## Known Limitations
 - Single HTML file implementation (no external dependencies)
-- No bundled audio files; background music and the optional bridge-break sound cue are player-enabled via the settings sound toggle (see Accessibility Enhancements)
+- No bundled audio files; all sound (bridge-break cue, optional background-music loop) is **synthesized via WebAudio** and controlled by the settings sound toggle (see Accessibility Enhancements)
 - Limited to browser-based execution
